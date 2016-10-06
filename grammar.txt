@@ -13,16 +13,16 @@ rparen  27
 
 program -> stmt_list tok_eof
 stmt_list -> stmt stmt_list
-stmt_list -> 
+stmt_list ->
 stmt -> ident becomes expr
 stmt -> rw_read ident
 stmt -> rw_write expr
 expr -> term term_tail
 term_tail -> add_op term term_tail
-term_tail -> 
+term_tail ->
 term -> factor fact_tail
 fact_tail -> mult_op factor fact_tail
-fact_tail -> 
+fact_tail ->
 factor -> lparen expr rparen
 factor -> ident
 factor -> lit_int
