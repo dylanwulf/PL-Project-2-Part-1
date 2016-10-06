@@ -15,7 +15,9 @@ vector<string> nonterminals;
 vector<int> nonterminal_numbers;
 vector< vector<int> > right_hand_sides;
 
-
+/*
+    splits the input string into strings around a delimiter, stored in a vector.
+ */
 vector<string> split(const char *str, char c) {
     vector<string> result;
     do {
@@ -27,6 +29,9 @@ vector<string> split(const char *str, char c) {
     return result;
 }
 
+/*
+    reads a file and returns the contents of it in a vector string
+ */
 vector<string> read_file(string filename) {
     vector<string> contents;
     string line;
@@ -39,6 +44,9 @@ vector<string> read_file(string filename) {
     return contents;
 }
 
+/*
+    populates the terminals vector with all of the terminal symbols
+ */
 void fill_terminals(vector<string> contents) {
     for(int i = 0; i < number_of_terminals; i++) {
         vector<string> temp = split(contents[i].c_str(), ' ');
@@ -53,6 +61,9 @@ void fill_terminals(vector<string> contents) {
     }
 }
 
+/*
+    populates the nonterminals vector with all of the nonterminal symbols
+ */
 void fill_nonterminals(vector<string> productions) {
     int count = 0;
     for(int i = 0; i < number_of_productions; i++) {
@@ -65,6 +76,10 @@ void fill_nonterminals(vector<string> productions) {
     }
 }
 
+/*
+    populates the right_hand_side vector with vectors of the right hand sides of
+    the populations
+ */
 void set_right_hand_sides(vector<string> productions, vector<string> contents) {
     vector<int> first;
     first.push_back(0);
@@ -102,6 +117,9 @@ void set_right_hand_sides(vector<string> productions, vector<string> contents) {
     }
 }
 
+/*
+    assigns values to the variables declared at the beginning
+ */
 void set_variables(vector<string> contents, vector<string> productions) {
     number_of_terminals = contents.size() - 1;
     number_of_productions = productions.size();
@@ -115,6 +133,10 @@ void set_variables(vector<string> contents, vector<string> productions) {
     set_right_hand_sides(productions, contents);
 }
 
+/*
+    splits the input file into a vector of tokens and a vector of productions,
+    then uses these vectors as arguments to set_variables
+ */
 int main() {
     vector<string> contents = read_file("grammar.txt");
     vector<string> productions;
