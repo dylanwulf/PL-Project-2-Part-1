@@ -6,7 +6,9 @@
 using namespace std;
 
 int number_of_productions;
-int number_of_tokens;
+int number_of_terminals;
+int number_of_nonterminals;
+int number_of_symbols;
 vector<string> terminals;
 vector<string> nonterminals;
 
@@ -34,20 +36,23 @@ vector<string> read_file(string filename) {
 }
 
 void set_variables(vector<string> contents, vector<string> productions) {
-    number_of_tokens = contents.size();
+    number_of_terminals = contents.size() - 1;
     number_of_productions = productions.size();
 
-    for(int i = 0; i < contents.size(); i++) {
+    for(int i = 0; i < number_of_terminals; i++) {
         vector<string> temp = split(contents[i].c_str(), ' ');
         if(std::find(terminals.begin(), terminals.end(), temp[0]) == terminals.end())
             terminals.push_back(temp[0]);
     }
 
-    for(int i = 0; i < productions.size(); i++) {
+    for(int i = 0; i < number_of_productions; i++) {
         vector<string> temp = split(productions[i].c_str(), ' ');
         if(std::find(nonterminals.begin(), nonterminals.end(), temp[0]) == nonterminals.end())
             nonterminals.push_back(temp[0]);
     }
+
+    number_of_nonterminals = nonterminals.size();
+    number_of_symbols = number_of_nonterminals + number_of_terminals;
 }
 
 int main() {
