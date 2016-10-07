@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <map>
 using namespace std;
 
 int number_of_productions;
@@ -22,10 +23,12 @@ vector<string> split(string str, string delimiter) {
     vector<string> out;
     string substr;
     int current_part = 0;
-    for (int i = 0; i < str.size() - delimiter.size(); i++) {
+    for (int i = 0; i < str.size() - delimiter.size() + 1; i++) {
         substr = str.substr(i, delimiter.size());
         if (substr == delimiter) {
-            out.push_back(str.substr(current_part, i - current_part));
+            string new_entry = str.substr(current_part, i - current_part);
+            if (!new_entry.empty())
+                out.push_back(new_entry);
             current_part = i + delimiter.size();
         }
     }
@@ -44,82 +47,56 @@ vector<string> read_file(string filename) {
         string line;
         while (getline(file, line))
             contents.push_back(line);
+        file.close();
     }
-    file.close();
     return contents;
 }
 
 /*
     populates the terminals vector with all of the terminal symbols
  */
-void fill_terminals(vector<string> contents) {
-    for(int i = 0; i < number_of_terminals; i++) {
-        vector<string> temp = split(contents[i].c_str(), " ");
-
-        if(find(terminals.begin(), terminals.end(), temp[0]) == terminals.end()) {
-            terminals.push_back(temp[0]);
-            for(int i = 1; i < temp.size(); i++) {
-                if(!temp[i].empty())
-                    terminal_numbers.push_back(atoi(temp[i].c_str()));
-            }
-        }
+map<string, int> fill_terminals(vector<string> terminals_str) {
+    map<string, int> terminals_map;
+    for (vector<string>::iterator it = terminals_str.begin(); it != terminals_str.end(); it++) {
+        vector<string> split_t = split(*it, " ");
+        terminals_map.insert(pair<string, int>(split_t[0], atoi(split_t[1].c_str())));
     }
+    return terminals_map;
 }
 
 /*
     populates the nonterminals vector with all of the nonterminal symbols
  */
-void fill_nonterminals(vector<string> productions) {
-    int count = 0;
-    for(int i = 0; i < number_of_productions; i++) {
-        vector<string> temp = split(productions[i].c_str(), " ");
-        if(find(nonterminals.begin(), nonterminals.end(), temp[0]) == nonterminals.end()) {
-            count++;
-            nonterminals.push_back(temp[0]);
-            nonterminal_numbers.push_back(count);
-        }
+map<string, int> fill_nonterminals(vector<string> productions) {
+    map<string, int> nonterminals_map;
+    for (vector<string>::iterator it = productions.begin(); it != productions.end(); it++) {
+        vector<string> str_prods = split(*it, "->");
+        string nonterminal_name = split(str_prods[0], " ")[0];
+        nonterminals_map.insert(pair<string, int>(nonterminal_name, nonterminals_map.size()+1));
     }
+    return nonterminals_map;
 }
 
-/*
-    populates the right_hand_side vector with vectors of the right hand sides of
-    the populations
- */
-void set_right_hand_sides(vector<string> productions, vector<string> contents) {
-    vector<int> first;
-    first.push_back(0);
-    right_hand_sides.push_back(first);
-
-    for(int i = 0; i < number_of_productions; i++) {
-        vector<string> temp = split(productions[i].c_str(), " ");
-        vector<string> rhs_strings;
-
-        if(temp.size() < 3) {
-            rhs_strings.push_back("0");
-        }
-
-        for(int j = 2; j < temp.size(); j++)
-            rhs_strings.push_back(temp[j]);
-
+vector< vector<int> > fill_productions(map<string, int> terminals, map<string, int> nonterminals, vector<string> productions) {
+    vector< vector<int> > prod_out;
+    for (vector<string>::iterator it = productions.begin(); it != productions.end(); it++) {
+        vector<string> str_prods = split(*it, "->");
+        string nonterminal_name = split(str_prods[0], " ")[0];
         vector<int> rhs;
-        rhs.push_back(0);
-        for(int i = 0; i < rhs_strings.size(); i++) {
-            if(find(terminals.begin(), terminals.end(), rhs_strings[i]) != terminals.end()) {
-                int pos = find(terminals.begin(), terminals.end(), rhs_strings[i]) - terminals.begin();
-                rhs.push_back(0 - terminal_numbers[pos]);
-            }
-            else if(find(nonterminals.begin(), nonterminals.end(), rhs_strings[i]) != nonterminals.end()) {
-                int pos = find(nonterminals.begin(), nonterminals.end(), rhs_strings[i]) - nonterminals.begin();
-                rhs.push_back(nonterminal_numbers[pos]);
+        if (str_prods.size() > 1) {
+            vector<string> rhs_str = split(str_prods[1], " ");
+            for (vector<string>::iterator it = rhs_str.begin(); it != rhs_str.end(); it++) {
+                int term_num = terminals[*it];
+                int nonterm_num = nonterminals[*it];
+                if (term_num != 0)
+                    rhs.push_back(-1*term_num);
+                else
+                    rhs.push_back(nonterm_num);
             }
         }
-        for(int i: rhs) {
-            cout << i;
-            cout << " ";
-        }
-        cout << endl;
-        right_hand_sides.push_back(rhs);
+        prod_out.push_back(rhs);
     }
+    return prod_out;
 }
 
 /*
@@ -135,7 +112,7 @@ void set_variables(vector<string> contents, vector<string> productions) {
     number_of_nonterminals = nonterminals.size();
     number_of_symbols = number_of_nonterminals + number_of_terminals;
 
-    set_right_hand_sides(productions, contents);
+    //set_right_hand_sides(productions, contents);
 }
 
 /*
@@ -144,16 +121,36 @@ void set_variables(vector<string> contents, vector<string> productions) {
  */
 int main() {
     vector<string> contents = read_file("grammar.txt");
+    vector<string> terminals;
     vector<string> productions;
 
-    while(!contents.back().empty()) {
-        productions.push_back(contents.back());
-        contents.pop_back();
+    //split contents into terminals and productions
+    bool found_blank = false;
+    for (vector<string>::iterator it = contents.begin(); it != contents.end(); it++) {
+        if (!found_blank) {
+            if (*it != "")
+                terminals.push_back(*it);
+            else
+                found_blank = true;
+        }
+        else {
+            productions.push_back(*it);
+        }
+    }
+    
+    map<string, int> terminals_map = fill_terminals(terminals);
+    map<string, int> nonterminals_map = fill_nonterminals(productions);
+
+    vector< vector<int> > prods = fill_productions(terminals_map, nonterminals_map, productions);
+
+    for (vector< vector<int> >::iterator it = prods.begin(); it != prods.end(); it++) {
+        reverse((*it).begin(), (*it).end());
+        for (vector<int>::iterator jt = (*it).begin(); jt != (*it).end(); jt++)
+            cout << *jt << ", ";
+        cout << endl;
     }
 
-    reverse(productions.begin(), productions.end());
-
-    set_variables(contents, productions);
+    //set_variables(terminals, productions);
 
     return 0;
 }
