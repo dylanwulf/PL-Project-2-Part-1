@@ -18,15 +18,20 @@ vector< vector<int> > right_hand_sides;
 /*
     splits the input string into strings around a delimiter, stored in a vector.
  */
-vector<string> split(const char *str, char c) {
-    vector<string> result;
-    do {
-        const char *begin = str;
-        while(*str != c && *str)
-            str++;
-        result.push_back(string(begin, str));
-    } while (0 != *str++);
-    return result;
+vector<string> split(string str, string delimiter) {
+    vector<string> out;
+    string substr;
+    int current_part = 0;
+    for (int i = 0; i < str.size() - delimiter.size(); i++) {
+        substr = str.substr(i, delimiter.size());
+        if (substr == delimiter) {
+            out.push_back(str.substr(current_part, i - current_part));
+            current_part = i + delimiter.size();
+        }
+    }
+    if (current_part != str.size())
+        out.push_back(str.substr(current_part, str.size() - current_part));
+    return out;
 }
 
 /*
@@ -34,13 +39,13 @@ vector<string> split(const char *str, char c) {
  */
 vector<string> read_file(string filename) {
     vector<string> contents;
-    string line;
     ifstream file((char*)filename.c_str());
     if (file.is_open()) {
-        while(getline(file, line))
+        string line;
+        while (getline(file, line))
             contents.push_back(line);
-        file.close();
     }
+    file.close();
     return contents;
 }
 
@@ -49,7 +54,7 @@ vector<string> read_file(string filename) {
  */
 void fill_terminals(vector<string> contents) {
     for(int i = 0; i < number_of_terminals; i++) {
-        vector<string> temp = split(contents[i].c_str(), ' ');
+        vector<string> temp = split(contents[i].c_str(), " ");
 
         if(find(terminals.begin(), terminals.end(), temp[0]) == terminals.end()) {
             terminals.push_back(temp[0]);
@@ -67,7 +72,7 @@ void fill_terminals(vector<string> contents) {
 void fill_nonterminals(vector<string> productions) {
     int count = 0;
     for(int i = 0; i < number_of_productions; i++) {
-        vector<string> temp = split(productions[i].c_str(), ' ');
+        vector<string> temp = split(productions[i].c_str(), " ");
         if(find(nonterminals.begin(), nonterminals.end(), temp[0]) == nonterminals.end()) {
             count++;
             nonterminals.push_back(temp[0]);
@@ -86,7 +91,7 @@ void set_right_hand_sides(vector<string> productions, vector<string> contents) {
     right_hand_sides.push_back(first);
 
     for(int i = 0; i < number_of_productions; i++) {
-        vector<string> temp = split(productions[i].c_str(), ' ');
+        vector<string> temp = split(productions[i].c_str(), " ");
         vector<string> rhs_strings;
 
         if(temp.size() < 3) {
