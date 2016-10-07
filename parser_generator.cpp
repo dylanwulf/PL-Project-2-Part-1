@@ -100,11 +100,11 @@ vector< vector<int> > fill_productions(map<string, int> terminals, map<string, i
     return prod_out;
 }
 
-vector<bool> fill_eps(vector< vector<int> > prods, vector<int> prod_to_nons, int num_nonterms) {
+vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
     vector<bool> out(num_nonterms + 1, false);
     for (int i = 0; i < prods.size(); i++) {
         if (prods[i].size() <= 1) {
-            out[prod_to_nons[i]] = true;
+            out[prods[i][0]] = true;
         }
     }
     return out;
@@ -184,17 +184,6 @@ int number_of_nonterms, vector< vector<int> > firsts) {
     return follows;
 }
 
-vector<int> prod_to_nonterms(vector<string> productions, map<string, int> nonterms) {
-    vector<int> out;
-    out.push_back(0);
-    out[0] = 0; //productions start at #1, so we'll just ignore index 0
-    for (int i = 1; i < productions.size() + 1; i++) {
-        string nonterm_str = split(split(productions[i-1], "->")[0], " ")[0];
-        out.push_back(nonterms[nonterm_str]);
-    }
-    return out;
-}
-
 /*
     assigns values to the variables declared at the beginning
  */
@@ -237,10 +226,8 @@ int main() {
     map<string, int> terminals_map = fill_terminals(terminals);
     map<string, int> nonterminals_map = fill_nonterminals(productions);
 
-    vector<int> prod_to_nons = prod_to_nonterms(productions, nonterminals_map);
-
     vector< vector<int> > prods = fill_productions(terminals_map, nonterminals_map, productions);
-    vector<bool> eps = fill_eps(prods, prod_to_nons, nonterminals_map.size());
+    vector<bool> eps = fill_eps(prods, nonterminals_map.size());
     for (int i = 1; i < eps.size(); i++)
         cout << "eps[" << i << "] " << eps[i] << endl;
     cout << endl;
