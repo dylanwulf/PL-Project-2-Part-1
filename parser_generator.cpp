@@ -97,23 +97,23 @@ vector< vector<int> > fill_productions(map<string, int> terminals, map<string, i
         }
         prod_out.push_back(production);
     }
-    for(vector<int> v: prod_out) {
-        cout << v[0] << endl;
-    }
+    //for(vector<int> v: prod_out) {
+    //    cout << v[0] << endl;
+    //}
     return prod_out;
 }
 
 vector<bool> fill_eps(vector< vector<int> > prods, vector<int> prod_to_nons, int num_nonterms) {
     vector<bool> out(num_nonterms + 1, false);
     for (int i = 0; i < prods.size(); i++) {
-        if (prods[i].empty()) {
+        if (prods[i].size() <= 1) {
             out[prod_to_nons[i]] = true;
         }
     }
     return out;
 }
 
-bool vector_contains(vector<int> v, int n) {
+bool vector_contains(const vector<int> v, const int n) {
     for (int i = 0; i < v.size(); i++) {
         if (v[i] == n)
             return true;
@@ -121,33 +121,40 @@ bool vector_contains(vector<int> v, int n) {
     return false;
 }
 
-//add v2 stuff into v1
-vector<int> vector_union(vector<int> v1, vector<int> v2) {
-    vector<int> out(v1);
+//add everything in v2 into v1, without making duplicates.
+//returns true if something was added, false if no change
+bool vector_union(vector<int> &v1, vector<int> &v2) {
+    bool out = false;
     for (int i = 0; i < v2.size(); i++) {
-        if (!vector_contains(out, v2[i])) {
-            out.push_back(v2[i]);
+        if (!vector_contains(v1, v2[i])) {
+            v1.push_back(v2[i]);
+            out = true;
         }
     }
     return out;
 }
 
-vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, vector<int> prod_to_nons, int num_non_terms) {
+vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, int num_non_terms) {
     vector< vector<int> > firsts;
     for (int i = 0; i < num_non_terms; i++) //make a vector for each nonterminal
         firsts.push_back(vector<int>());
 
-    for(int lhs = 0; lhs < prods.size(); lhs++) {
-        for (int rhs = 0; rhs < prods[lhs].size(); rhs++) {
-            int term = prods[lhs][rhs];
-            int first_loc = prod_to_nons[lhs];
-            if (term < 0) {
-                firsts[first_loc] = vector_union(firsts[first_loc], vector<int>(1, term));
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for(int lhs = 0; lhs < prods.size(); lhs++) {
+            for (int rhs = 1; rhs < prods[lhs].size(); rhs++) {
+                int term = prods[lhs][rhs];
+                if (term < 0) {
+                    vector<int> term_vector(1, term);
+                    changed = changed || vector_union(firsts[prods[lhs][0]-1], term_vector);
+                    rhs = prods[lhs].size();
+                }
+                else
+                    changed = changed || vector_union(firsts[prods[lhs][0]-1], firsts[term-1]);
+                if (term > 0 && eps[term] == false)
+                    rhs = prods[lhs].size();
             }
-            else
-                firsts[first_loc] = vector_union(firsts[first_loc], firsts[term]);
-            if (term > 0 && eps[term-1] == false)
-                rhs = prods[lhs].size();
         }
     }
     return firsts;
@@ -223,9 +230,22 @@ int main() {
 
     vector< vector<int> > prods = fill_productions(terminals_map, nonterminals_map, productions);
     vector<bool> eps = fill_eps(prods, prod_to_nons, nonterminals_map.size());
+    for (int i = 1; i < eps.size(); i++)
+        cout << "eps[" << i << "] " << eps[i] << endl;
+    cout << endl;
 
-    vector< vector<int> > firsts = fill_first(prods, eps, prod_to_nons, nonterminals_map.size());
+    for (int i = 0; i < prods.size(); i++) {
+        cout << "prods[" << i << "] ";
+        for (int j = 0; j < prods[i].size(); j++) {
+            cout << prods[i][j] << ", ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+
+    vector< vector<int> > firsts = fill_first(prods, eps, nonterminals_map.size());
     for (int i = 0; i < firsts.size(); i++) {
+        cout << "firsts[" << (i + 1) << "] ";
         for (int j = 0; j < firsts[i].size(); j++) {
             cout << firsts[i][j] << ", ";
         }
