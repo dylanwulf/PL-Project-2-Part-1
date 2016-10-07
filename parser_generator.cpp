@@ -6,7 +6,7 @@
 #include <map>
 using namespace std;
 
-int number_of_productions;
+/*int number_of_productions;
 int number_of_terminals;
 int number_of_nonterminals;
 int number_of_symbols;
@@ -15,7 +15,7 @@ vector<int> terminal_numbers;
 vector<string> nonterminals;
 vector<int> nonterminal_numbers;
 vector< vector<int> > right_hand_sides;
-
+*/
 /*
     splits the input string into strings around a delimiter, stored in a vector.
  */
@@ -110,7 +110,7 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
     return out;
 }
 
-bool vector_contains(const vector<int> v, const int n) {
+bool vector_contains(vector<int> v, int n) {
     for (int i = 0; i < v.size(); i++) {
         if (v[i] == n)
             return true;
@@ -168,9 +168,15 @@ bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
 vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> > firsts, vector<bool> eps) {
     vector<int> out;
     for (int i = begin; i < end; i++) {
-        vector_union(out, firsts[X[i]]);
-        if (!eps[X[i]])
+        vector<int> first;
+        if (X[i] < 0)
+            first = vector<int>(1, X[i]);
+        else
+            first = firsts[X[i]];
+        vector_union(out, first);
+        if (X[i] < 0 || !eps[X[i]]){
             return out;
+        }
     }
     return out;
 }
@@ -178,23 +184,20 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
-    for (int i = 0; i < number_of_nonterms; i++)
+    for (int i = 0; i < number_of_nonterms + 75; i++)
         follows.push_back(vector<int>());
 
-    for (int i = 0; i < productions.size(); i++){
-        if(productions[i].size() > 2) {
+    bool change = true;
+    while (change) {
+        change = false;
+        for (int i = 0; i < productions.size(); i++){
             for (int j = 1; j < productions[i].size(); j++) {
-                if(j + 1 >= productions[i].size()) break;
-                vector_union(follows[i], firsts[j+1]);
-                // for(int i: follows[i])
-                //     cout << i << " ";
-                // cout << endl;
-            }
-        }
-        if(productions[i].size() > 1) {
-            for (int j = 1; j < productions[i].size(); j++) {
-                if(j + 1 >= productions[i].size() || eps[j+1]) {
-                    vector_union(follows[i], follows[productions[i][0]]);
+                if(j < productions[i].size() - 1 && productions[i][j] > 0) {
+                    vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
+                    change = change || vector_union(follows[productions[i][j]-1], str_first);
+                }
+                if(j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps)) {
+                    change = change || vector_union(follows[productions[i][j]-1], follows[productions[i][0]-1]);
                 }
             }
         }
@@ -205,7 +208,7 @@ int number_of_nonterms, vector< vector<int> > firsts) {
 /*
     assigns values to the variables declared at the beginning
  */
-void set_variables(vector<string> contents, vector<string> productions) {
+/*void set_variables(vector<string> contents, vector<string> productions) {
     number_of_terminals = contents.size() - 1;
     number_of_productions = productions.size();
 
@@ -216,7 +219,7 @@ void set_variables(vector<string> contents, vector<string> productions) {
     number_of_symbols = number_of_nonterminals + number_of_terminals;
 
     //set_right_hand_sides(productions, contents);
-}
+}*/
 
 /*
     splits the input file into a vector of tokens and a vector of productions,
@@ -259,7 +262,11 @@ int main() {
     }
     cout << endl;
 
-    vector< vector<int> > firsts = fill_first(prods, eps, nonterminals_map.size());
+    int num_nonterms = nonterminals_map.size();
+    terminals_map.clear();
+    nonterminals_map.clear();
+
+    vector< vector<int> > firsts = fill_first(prods, eps, num_nonterms);
     for (int i = 1; i < firsts.size(); i++) {
         cout << "firsts[" << (i) << "] ";
         for (int j = 0; j < firsts[i].size(); j++) {
@@ -268,7 +275,14 @@ int main() {
         cout << endl;
     }
 
-    vector< vector<int> > follows = fill_follow(prods, eps, nonterminals_map.size(), firsts);
+
+    vector< vector<int> > follows = fill_follow(prods, eps, num_nonterms, firsts);
+    for (int i = 0; i < follows.size(); i++) {
+        cout << "follows[" << i << "] ";
+        for (int j = 0; j < follows[i].size(); j++)
+            cout << follows[i][j] << ", ";
+        cout << endl;
+    }
 
     // vector< vector<int> > follows = fill_follow(prods, eps, prod_to_nons,
     //     nonterminals_map.size() + terminals_map.size(), firsts);
