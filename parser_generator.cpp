@@ -133,7 +133,7 @@ bool vector_union(vector<int> &v1, vector<int> &v2) {
 
 vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, int num_non_terms) {
     vector< vector<int> > firsts;
-    for (int i = 0; i < num_non_terms; i++) //make a vector for each nonterminal
+    for (int i = 0; i < num_non_terms + 1; i++) //make a vector for each nonterminal
         firsts.push_back(vector<int>());
 
     bool changed = true;
@@ -144,11 +144,11 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
                 int term = prods[lhs][rhs];
                 if (term < 0) {
                     vector<int> term_vector(1, term);
-                    changed = changed || vector_union(firsts[prods[lhs][0]-1], term_vector);
+                    changed = changed || vector_union(firsts[prods[lhs][0]], term_vector);
                     rhs = prods[lhs].size();
                 }
                 else
-                    changed = changed || vector_union(firsts[prods[lhs][0]-1], firsts[term-1]);
+                    changed = changed || vector_union(firsts[prods[lhs][0]], firsts[term]);
                 if (term > 0 && eps[term] == false)
                     rhs = prods[lhs].size();
             }
@@ -157,7 +157,25 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
     return firsts;
 }
 
-vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps, vector<int> prods_to_nons,
+bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
+    for (int i = begin; i < end; i++) {
+        if ( X[i] < 0 || !eps[X[i]])
+            return false;
+    }
+    return true;
+}
+
+vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> > firsts, vector<bool> eps) {
+    vector<int> out;
+    for (int i = begin; i < end; i++) {
+        vector_union(out, firsts[X[i]]);
+        if (!eps[X[i]])
+            return out;
+    }
+    return out;
+}
+
+vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
     for (int i = 0; i < number_of_nonterms; i++)
@@ -242,13 +260,15 @@ int main() {
     cout << endl;
 
     vector< vector<int> > firsts = fill_first(prods, eps, nonterminals_map.size());
-    for (int i = 0; i < firsts.size(); i++) {
-        cout << "firsts[" << (i + 1) << "] ";
+    for (int i = 1; i < firsts.size(); i++) {
+        cout << "firsts[" << (i) << "] ";
         for (int j = 0; j < firsts[i].size(); j++) {
             cout << firsts[i][j] << ", ";
         }
         cout << endl;
     }
+
+    vector< vector<int> > follows = fill_follow(prods, eps, nonterminals_map.size(), firsts);
 
     // vector< vector<int> > follows = fill_follow(prods, eps, prod_to_nons,
     //     nonterminals_map.size() + terminals_map.size(), firsts);
