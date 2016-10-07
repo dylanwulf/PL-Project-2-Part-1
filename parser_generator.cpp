@@ -82,19 +82,23 @@ vector< vector<int> > fill_productions(map<string, int> terminals, map<string, i
     for (vector<string>::iterator it = productions.begin(); it != productions.end(); it++) {
         vector<string> str_prods = split(*it, "->");
         string nonterminal_name = split(str_prods[0], " ")[0];
-        vector<int> rhs;
+        int lhs_nonterm_num = nonterminals[nonterminal_name];
+        vector<int> production = vector<int>(1, lhs_nonterm_num);
         if (str_prods.size() > 1) {
             vector<string> rhs_str = split(str_prods[1], " ");
             for (vector<string>::iterator it = rhs_str.begin(); it != rhs_str.end(); it++) {
                 int term_num = terminals[*it];
                 int nonterm_num = nonterminals[*it];
                 if (term_num != 0)
-                    rhs.push_back(-1*term_num);
+                    production.push_back(-1*term_num);
                 else
-                    rhs.push_back(nonterm_num);
+                    production.push_back(nonterm_num);
             }
         }
-        prod_out.push_back(rhs);
+        prod_out.push_back(production);
+    }
+    for(vector<int> v: prod_out) {
+        cout << v[0] << endl;
     }
     return prod_out;
 }
@@ -149,6 +153,19 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
     return firsts;
 }
 
+// vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps, vector<int> prods_to_nons,
+// int number_of_symbols, vector< vector<int> > firsts) {
+//     vector< vector<int> > follows;
+//     for (int i = 0; i < number_of_symbols; i++)
+//         follows.push_back(vector<int>());
+//
+//     for(int i = 0; i < productions.size(); i++) {
+//         for(int j = 0; j < productions[i].size(); j++) {
+//             if(productions[i] )
+//         }
+//     }
+// }
+
 vector<int> prod_to_nonterms(vector<string> productions, map<string, int> nonterms) {
     vector<int> out;
     out.push_back(0);
@@ -198,7 +215,7 @@ int main() {
             productions.push_back(*it);
         }
     }
-    
+
     map<string, int> terminals_map = fill_terminals(terminals);
     map<string, int> nonterminals_map = fill_nonterminals(productions);
 
@@ -214,6 +231,9 @@ int main() {
         }
         cout << endl;
     }
+
+    // vector< vector<int> > follows = fill_follow(prods, eps, prod_to_nons,
+    //     nonterminals_map.size() + terminals_map.size(), firsts);
 
     //set_variables(terminals, productions);
 
