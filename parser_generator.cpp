@@ -97,9 +97,6 @@ vector< vector<int> > fill_productions(map<string, int> terminals, map<string, i
         }
         prod_out.push_back(production);
     }
-    //for(vector<int> v: prod_out) {
-    //    cout << v[0] << endl;
-    //}
     return prod_out;
 }
 
@@ -160,18 +157,32 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
     return firsts;
 }
 
-// vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps, vector<int> prods_to_nons,
-// int number_of_symbols, vector< vector<int> > firsts) {
-//     vector< vector<int> > follows;
-//     for (int i = 0; i < number_of_symbols; i++)
-//         follows.push_back(vector<int>());
-//
-//     for(int i = 0; i < productions.size(); i++) {
-//         for(int j = 0; j < productions[i].size(); j++) {
-//             if(productions[i] )
-//         }
-//     }
-// }
+vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps, vector<int> prods_to_nons,
+int number_of_nonterms, vector< vector<int> > firsts) {
+    vector< vector<int> > follows;
+    for (int i = 0; i < number_of_nonterms; i++)
+        follows.push_back(vector<int>());
+
+    for (int i = 0; i < productions.size(); i++){
+        if(productions[i].size() > 2) {
+            for (int j = 1; j < productions[i].size(); j++) {
+                if(j + 1 >= productions[i].size()) break;
+                follows[i] = vector_union(follows[i], firsts[j+1]);
+                // for(int i: follows[i])
+                //     cout << i << " ";
+                // cout << endl;
+            }
+        }
+        if(productions[i].size() > 1) {
+            for (int j = 1; j < productions[i].size(); j++) {
+                if(j + 1 >= productions[i].size() || eps[j+1]) {
+                    follows[i] = vector_union(follows[i], follows[productions[i][0]]);
+                }
+            }
+        }
+    }
+    return follows;
+}
 
 vector<int> prod_to_nonterms(vector<string> productions, map<string, int> nonterms) {
     vector<int> out;
