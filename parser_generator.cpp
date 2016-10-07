@@ -167,7 +167,7 @@ int number_of_nonterms, vector< vector<int> > firsts) {
         if(productions[i].size() > 2) {
             for (int j = 1; j < productions[i].size(); j++) {
                 if(j + 1 >= productions[i].size()) break;
-                follows[i] = vector_union(follows[i], firsts[j+1]);
+                vector_union(follows[i], firsts[j+1]);
                 // for(int i: follows[i])
                 //     cout << i << " ";
                 // cout << endl;
@@ -176,7 +176,7 @@ int number_of_nonterms, vector< vector<int> > firsts) {
         if(productions[i].size() > 1) {
             for (int j = 1; j < productions[i].size(); j++) {
                 if(j + 1 >= productions[i].size() || eps[j+1]) {
-                    follows[i] = vector_union(follows[i], follows[productions[i][0]]);
+                    vector_union(follows[i], follows[productions[i][0]]);
                 }
             }
         }
