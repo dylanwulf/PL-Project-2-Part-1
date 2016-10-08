@@ -110,6 +110,14 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
     return out;
 }
 
+bool array_contains(int *a, int size, int n) {
+    for (int i = 0; i < size; i++) {
+        if (a[i] == n)
+            return true;
+    }
+    return false;
+}
+
 bool vector_contains(vector<int> v, int n) {
     for (int i = 0; i < v.size(); i++) {
         if (v[i] == n)
@@ -125,6 +133,17 @@ bool vector_union(vector<int> &v1, vector<int> &v2) {
     for (int i = 0; i < v2.size(); i++) {
         if (!vector_contains(v1, v2[i])) {
             v1.push_back(v2[i]);
+            out = true;
+        }
+    }
+    return out;
+}
+
+bool vector_union(vector<int> *v1, const vector<int> v2) {
+    bool out = false;
+    for (int i = 0; i < v2.size(); i++) {
+        if (!vector_contains(*v1, v2[i])) {
+            v1->push_back(v2[i]);
             out = true;
         }
     }
@@ -157,6 +176,7 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
     return firsts;
 }
 
+
 bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
     for (int i = begin; i < end; i++) {
         if ( X[i] < 0 || !eps[X[i]])
@@ -184,20 +204,27 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
-    for (int i = 0; i < number_of_nonterms + 75; i++)
-        follows.push_back(vector<int>());
+    for (int i = 0; i < number_of_nonterms*100; i++){
+        vector<int> empty;
+        follows.push_back(empty);
+    }
 
     bool change = true;
+    //for (int aa = 0; aa < 30; aa++) {
+        //cin.ignore();
     while (change) {
         change = false;
         for (int i = 0; i < productions.size(); i++){
             for (int j = 1; j < productions[i].size(); j++) {
                 if(j < productions[i].size() - 1 && productions[i][j] > 0) {
                     vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
-                    change = change || vector_union(follows[productions[i][j]-1], str_first);
+                    vector<int> *follow_current = &follows[productions[i][j]];
+                    change = change || vector_union(follow_current, str_first);
                 }
                 if(j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps)) {
-                    change = change || vector_union(follows[productions[i][j]-1], follows[productions[i][0]-1]);
+                    vector<int> *follow_current = &follows[productions[i][j]];
+                    vector<int> follow_lhs = follows[productions[i][0]];
+                    change = change || vector_union(follow_current, follow_lhs);
                 }
             }
         }
@@ -277,7 +304,7 @@ int main() {
 
 
     vector< vector<int> > follows = fill_follow(prods, eps, num_nonterms, firsts);
-    for (int i = 0; i < follows.size(); i++) {
+    for (int i = 0; i < 10; i++) {
         cout << "follows[" << i << "] ";
         for (int j = 0; j < follows[i].size(); j++)
             cout << follows[i][j] << ", ";
