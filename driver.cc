@@ -15,16 +15,13 @@ using namespace scanner;
 
 
 int main() {
-    int number_of_terminals = setup();
-    cout << number_of_terminals << endl;
-
-    // token tok;
-    // do {
-    //     tok = scan();
-    //     cout << setw(12) << left << tok.name
-    //          << setw(5) << right << tok.line
-    //          << setw(4) << right << tok.column
-    //          << "   " << tok.image << "\n";
-    // } while (tok.num != tok_eof);
-    // return 0;
+    token tok;
+    do {
+        tok = scan();
+        cout << setw(12) << left << tok.name
+             << setw(5) << right << tok.line
+             << setw(4) << right << tok.column
+             << "   " << tok.image << "\n";
+    } while (tok.num != tok_eof);
+    return 0;
 }

@@ -354,5 +354,5 @@ int setup() {
 
     //set_variables(terminals, productions);
 
-    return num_nonterms;
+    return 0;
 }
