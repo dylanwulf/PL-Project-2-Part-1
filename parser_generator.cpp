@@ -141,52 +141,17 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
 }
 
 /*
-    Takes in a vector of integers and an integer, and checks to see whether
-    the integer is within the vector.
-
-    Used by: vector_union()
- */
-bool vector_contains(vector<int> v, int n) {
-    for (int i = 0; i < v.size(); i++) {
-        if (v[i] == n)
-            return true;
-    }
-    return false;
-}
-
-/*
     Takes in two vectors and adds every element in the second vector not already
     contained by the first vector into the first vector. Return false if nothing
     was added and true if something was added.
 
     Used by functions: fill_first(), string_first(), fill_follow(), fill_predict()
  */
-bool vector_union(vector<int> &v1, vector<int> &v2) {
-    bool out = false;
-    for (int i = 0; i < v2.size(); i++) {
-        if (!vector_contains(v1, v2[i])) {
-            v1.push_back(v2[i]);
-            out = true;
-        }
-    }
-    return out;
-}
-
-/*
-    Takes in two vectors and adds every element in the second vector not already
-    contained by the first vector into the first vector. Return false if nothing
-    was added and true if something was added.
-
-    Used by functions: fill_first(), string_first(), fill_follow(), fill_predict()
- */
-bool vector_union(vector<int> *v1, const vector<int> v2) {
-    bool out = false;
-    for (int i = 0; i < v2.size(); i++) {
-        if (!vector_contains(*v1, v2[i])) {
-            v1->push_back(v2[i]);
-            out = true;
-        }
-    }
+vector<int> vector_union(const vector<int> v1, const vector<int> v2) {
+    vector<int> out(v1.size() + v2.size());
+    vector<int>::iterator it;
+    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), out.begin());
+    out.resize(it-out.begin());
     return out;
 }
 
@@ -212,11 +177,20 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
                 int term = prods[lhs][rhs];
                 if (term < 0) {
                     vector<int> term_vector(1, term);
-                    changed = changed || vector_union(firsts[prods[lhs][0]], term_vector);
+                    int old_size = firsts[prods[lhs][0]].size();
+                    firsts[prods[lhs][0]] = vector_union(firsts[prods[lhs][0]], term_vector);
+                    int new_size = firsts[prods[lhs][0]].size();
+                    if (new_size != old_size)
+                        changed = true;
                     rhs = prods[lhs].size();
                 }
-                else
-                    changed = changed || vector_union(firsts[prods[lhs][0]], firsts[term]);
+                else {
+                    int old_size = firsts[prods[lhs][0]].size();
+                    firsts[prods[lhs][0]] = vector_union(firsts[prods[lhs][0]], firsts[term]);
+                    int new_size = firsts[prods[lhs][0]].size();
+                    if (new_size != old_size)
+                        changed = true;
+                }
                 if (term > 0 && eps[term] == false)
                     rhs = prods[lhs].size();
             }
@@ -247,7 +221,7 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
             first = vector<int>(1, X[i]);
         else
             first = firsts[X[i]];
-        vector_union(out, first);
+        out = vector_union(out, first);
         if (X[i] < 0 || !eps[X[i]]){
             return out;
         }
@@ -267,14 +241,11 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
-    for (int i = 0; i < number_of_nonterms*100; i++){
-        vector<int> empty;
-        follows.push_back(empty);
+    for (int i = 0; i < number_of_nonterms + 1; i++){
+        follows.push_back(vector<int>());
     }
 
     bool change = true;
-    //for (int aa = 0; aa < 30; aa++) {
-        //cin.ignore();
     while (change) {
         change = false;
         for (int i = 0; i < productions.size(); i++){
@@ -282,12 +253,18 @@ int number_of_nonterms, vector< vector<int> > firsts) {
                 if(j < productions[i].size() - 1 && productions[i][j] > 0) {
                     vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
                     vector<int> *follow_current = &follows[productions[i][j]-1];
-                    change = change || vector_union(follow_current, str_first);
+                    int old_size = follow_current->size();
+                    *follow_current = vector_union(*follow_current, str_first);
+                    if (follow_current->size() != old_size)
+                        change = true;
                 }
-                if(j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps)) {
+                if(productions[i][j] > 0 && (j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps))) {
                     vector<int> *follow_current = &follows[productions[i][j]-1];
                     vector<int> follow_lhs = follows[productions[i][0]-1];
-                    change = change || vector_union(follow_current, follow_lhs);
+                    int old_size = follow_current->size();
+                    *follow_current = vector_union(*follow_current, follow_lhs);
+                    if (follow_current->size() != old_size)
+                        change = true;
                 }
             }
         }
@@ -313,17 +290,17 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
         if(!(productions[i].size() < 2)) {
             if(productions[i][1] < 0) {
                 vector<int> temp = vector<int>(1, productions[i][1]);
-                vector_union(predict, temp);
+                predict = vector_union(predict, temp);
             }
             else {
-                vector_union(predict, firsts[productions[i][1]]);
+                predict = vector_union(predict, firsts[productions[i][1]]);
                 if(eps[productions[i][1]]) {
-                    vector_union(predict, follows[productions[i][0]]);
+                    predict = vector_union(predict, follows[productions[i][0]]);
                 }
             }
         }
         else {
-            vector_union(predict, follows[productions[i][0]-1]);
+            predict = vector_union(predict, follows[productions[i][0]-1]);
         }
         predicts.push_back(predict);
     }
@@ -344,7 +321,6 @@ vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> >
         for (int j = 0; j < predict[i].size(); j++) {
             int row = prods[i][0] - 1;
             int col = predict[i][j]*(-1) - 1;
-            //int loc_value = (prods[i][0] - 1) * cols + predict[i][j]*(-1) - 1;
             p_tab[row][col] = i + 1;
         }
     }
@@ -358,8 +334,8 @@ vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> >
 
     Used by: driver.cc
  */
-int generate_parse_table() {
-    vector<string> contents = read_file("grammar.txt");
+int generate_parse_table(string grammar_file_name) {
+    vector<string> contents = read_file(grammar_file_name);
 
     //split contents into terminals and productions
     bool found_blank = false;
@@ -428,9 +404,6 @@ int generate_parse_table() {
         }
     }
 
-    //int parse_table[num_nonterms * max_terminal];
-    //for (int i = 0; i < num_nonterms * max_terminal; i++)
-        //parse_table[i] = 0;
     parse_table = fill_parse_table(num_nonterms, max_terminal, predicts, prods);
     for (int row = 0; row < num_nonterms; row++) {
         for (int col = 0; col < max_terminal; col++) {

@@ -18,7 +18,7 @@ using namespace scanner;
     as such for the user.
  */
 int main() {
-    generate_parse_table();
+    generate_parse_table("grammar.txt");
     stack<int> parse_stack;
     parse_stack.push(prods[0][0]);
     cout << endl << endl << "Start typing!" << endl;
