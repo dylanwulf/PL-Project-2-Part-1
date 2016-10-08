@@ -17,6 +17,42 @@ using namespace scanner;
 
 int main() {
     generate_parse_table();
+    stack<int> parse_stack;
+    parse_stack.push(prods[0][0]);
+    cout << "Pushed start symbol " << prods[0][0] << endl;
+    cout << "Predict " << productions[0] << endl;
+    token input = scan();
+    while (true) {
+        int expected = parse_stack.top();
+        parse_stack.pop();
+        if (expected < 0) {
+            if (expected * -1 == input.num) {
+                cout << "Match " << input.image << endl;
+            }
+            else {
+                cout << "ERROR: expected: " << expected << " input: " << input.num << endl;
+                exit(1);
+            }
+            if (expected * -1 == tok_eof) {
+                cout << "Done! Bye!" << endl;
+                exit(0);
+            }
+        }
+        else {
+            if (parse_table[expected-1][input.num-1] == 0) {
+                cout << "Parse error :( Exiting" << endl;
+                exit(1);
+            }
+            else {
+                int prediction = parse_table[expected-1][input.num-1];
+                cout << "Predict " << productions[prediction] << endl;
+                for (int i = prods[prediction].size() - 1; i > 0; i--){
+                    parse_stack.push(prods[prediction][i]);
+                }
+            }
+        }
+    }
+
     token tok;
     do {
         tok = scan();
