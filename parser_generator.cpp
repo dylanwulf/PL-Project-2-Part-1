@@ -7,18 +7,12 @@
 using namespace std;
 
 int max_terminal = 0;
-/*int number_of_productions;
-int number_of_terminals;
-int number_of_nonterminals;
-int number_of_symbols;
-vector<string> terminals;
-vector<int> terminal_numbers;
-vector<string> nonterminals;
-vector<int> nonterminal_numbers;
-vector< vector<int> > right_hand_sides;
-*/
+
 /*
-    splits the input string into strings around a delimiter, stored in a vector.
+    Takes in a string to be split and a delimiter around which to split the
+    string. The resulting substrings are stored in a vector, which is returned.
+
+    Used by functions: fill_terminals(), fill_nonterminals(), fill_productions()
  */
 vector<string> split(string str, string delimiter) {
     vector<string> out;
@@ -39,7 +33,10 @@ vector<string> split(string str, string delimiter) {
 }
 
 /*
-    reads a file and returns the contents of it in a vector string
+    Takes in a file's name in string form and reads the contents of the file.
+    Each line is separately added to a vector of strings, which is returned.
+
+    Used by functions: setup()
  */
 vector<string> read_file(string filename) {
     vector<string> contents;
@@ -54,7 +51,10 @@ vector<string> read_file(string filename) {
 }
 
 /*
-    populates the terminals vector with all of the terminal symbols
+    Takes in a vector of all terminals in string form. These terminals are added
+    as keys to a map with their integer equivalent as their keys.
+
+    Used by functions: setup()
  */
 map<string, int> fill_terminals(vector<string> terminals_str) {
     map<string, int> terminals_map;
@@ -69,7 +69,10 @@ map<string, int> fill_terminals(vector<string> terminals_str) {
 }
 
 /*
-    populates the nonterminals vector with all of the nonterminal symbols
+    Takes in a vector of all nonterminals in string form. These terminals are
+    added as keys to a map with their integer equivalent as their keys.
+
+    Used by functions: setup()
  */
 map<string, int> fill_nonterminals(vector<string> productions) {
     map<string, int> nonterminals_map;
@@ -81,6 +84,9 @@ map<string, int> fill_nonterminals(vector<string> productions) {
     return nonterminals_map;
 }
 
+/*
+    
+ */
 vector< vector<int> > fill_productions(map<string, int> terminals, map<string, int> nonterminals, vector<string> productions) {
     vector< vector<int> > prod_out;
     for (vector<string>::iterator it = productions.begin(); it != productions.end(); it++) {
