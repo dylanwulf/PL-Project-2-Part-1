@@ -6,10 +6,13 @@ using std::left;
 using std::right;
 
 #include "scan.h"
+#include "parser_generator.cpp"
 using namespace scanner;
 
 // Call scanner repeatedly, printing results.
 // You'll throw this code away once you've written your parser driver.
+
+
 
 int main() {
     token tok;

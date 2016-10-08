@@ -282,7 +282,7 @@ void fill_parse_table(int table[], int rows, int cols, vector< vector<int> > pre
     splits the input file into a vector of tokens and a vector of productions,
     then uses these vectors as arguments to set_variables
  */
-int main() {
+int setup() {
     vector<string> contents = read_file("grammar.txt");
     vector<string> terminals;
     vector<string> productions;
