@@ -218,12 +218,12 @@ int number_of_nonterms, vector< vector<int> > firsts) {
             for (int j = 1; j < productions[i].size(); j++) {
                 if(j < productions[i].size() - 1 && productions[i][j] > 0) {
                     vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
-                    vector<int> *follow_current = &follows[productions[i][j]];
+                    vector<int> *follow_current = &follows[productions[i][j]-1];
                     change = change || vector_union(follow_current, str_first);
                 }
                 if(j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps)) {
-                    vector<int> *follow_current = &follows[productions[i][j]];
-                    vector<int> follow_lhs = follows[productions[i][0]];
+                    vector<int> *follow_current = &follows[productions[i][j]-1];
+                    vector<int> follow_lhs = follows[productions[i][0]-1];
                     change = change || vector_union(follow_current, follow_lhs);
                 }
             }
@@ -255,6 +255,10 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
         predicts.push_back(predict);
     }
     return predicts;
+}
+
+void fill_parse_table(int table[], vector< vector<int> > predict) {
+
 }
 
 /*
