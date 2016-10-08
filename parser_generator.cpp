@@ -6,6 +6,7 @@
 #include <map>
 using namespace std;
 
+int max_terminal = 0;
 /*int number_of_productions;
 int number_of_terminals;
 int number_of_nonterminals;
@@ -59,7 +60,10 @@ map<string, int> fill_terminals(vector<string> terminals_str) {
     map<string, int> terminals_map;
     for (vector<string>::iterator it = terminals_str.begin(); it != terminals_str.end(); it++) {
         vector<string> split_t = split(*it, " ");
-        terminals_map.insert(pair<string, int>(split_t[0], atoi(split_t[1].c_str())));
+        int termnum = atoi(split_t[1].c_str());
+        if (termnum > max_terminal)
+            max_terminal = termnum;
+        terminals_map.insert(pair<string, int>(split_t[0], termnum));
     }
     return terminals_map;
 }
@@ -108,14 +112,6 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
         }
     }
     return out;
-}
-
-bool array_contains(int *a, int size, int n) {
-    for (int i = 0; i < size; i++) {
-        if (a[i] == n)
-            return true;
-    }
-    return false;
 }
 
 bool vector_contains(vector<int> v, int n) {
@@ -257,8 +253,13 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
     return predicts;
 }
 
-void fill_parse_table(int table[], vector< vector<int> > predict) {
-
+void fill_parse_table(int table[], int rows, int cols, vector< vector<int> > predict, vector< vector<int> > prods) {
+    for (int i = 0; i < predict.size(); i++) {
+        for (int j = 0; j < predict[i].size(); j++) {
+            int loc_value = (prods[i][0] - 1) * cols + predict[i][j]*(-1) - 1;
+            table[loc_value] = i + 1;
+        }
+    }
 }
 
 /*
@@ -319,6 +320,7 @@ int main() {
     cout << endl;
 
     int num_nonterms = nonterminals_map.size();
+    int num_terms = terminals_map.size();
     terminals_map.clear();
     nonterminals_map.clear();
 
@@ -350,6 +352,17 @@ int main() {
             }
             cout << endl;
         }
+    }
+
+    int parse_table[num_nonterms * max_terminal];
+    for (int i = 0; i < num_nonterms * max_terminal; i++)
+        parse_table[i] = 0;
+    fill_parse_table(parse_table, num_nonterms, max_terminal, predicts, prods);
+    for (int row = 0; row < num_nonterms; row++) {
+        for (int col = 0; col < max_terminal; col++) {
+            cout << parse_table[row*max_terminal + col] << " ";
+        }
+        cout << endl;
     }
 
     //set_variables(terminals, productions);
