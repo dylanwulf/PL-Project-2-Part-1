@@ -21,12 +21,6 @@ For the most part, this project uses vectors to store data. Vectors were chosen
 over arrays because indexing was needed for the collections, but the collections
 also needed to be grow as data was added to them.
 
-In the "fill_follow()" function, we encountered a memory issue in which the
-program would crash occasionally when run. To fix this issue, we allocated a
-larger-than-needed vector size to hold onto the follow set vectors. This has
-made it so that the program no longer crashes, and we were careful to ignore the
-empty space in the vector from that point on.
-
 One major negative aspect of our program is its runtime efficiency. Many of the
 algorithms within the program have a big O runtime efficiency of n^2 and higher.
 For a large input, this would cause an incredibly slow program. However,
