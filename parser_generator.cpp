@@ -6,8 +6,22 @@
 #include <map>
 using namespace std;
 
-int max_terminal = 0;
-
+vector<string> terminals;
+vector<string> productions;
+vector< vector<int> > prods;
+vector< vector<int> > firsts;
+vector< vector<int> > follows;
+vector< vector<int> > parse_table;
+/*int number_of_productions;
+int number_of_terminals;
+int number_of_nonterminals;
+int number_of_symbols;
+vector<int> terminal_numbers;
+vector<string> nonterminals;
+vector<int> nonterminal_numbers;
+vector< vector<int> > right_hand_sides;
+*/
+>>>>>>> 05b060a423556de2147ef76ee36c8541e3158bc9
 /*
     Takes in a string to be split and a delimiter around which to split the
     string. The resulting substrings are stored in a vector, which is returned.
@@ -85,7 +99,7 @@ map<string, int> fill_nonterminals(vector<string> productions) {
 }
 
 /*
-    
+
  */
 vector< vector<int> > fill_productions(map<string, int> terminals, map<string, int> nonterminals, vector<string> productions) {
     vector< vector<int> > prod_out;
@@ -259,13 +273,17 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
     return predicts;
 }
 
-void fill_parse_table(int table[], int rows, int cols, vector< vector<int> > predict, vector< vector<int> > prods) {
+vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> > predict, vector< vector<int> > prods) {
+    vector< vector<int> > p_tab(rows, vector<int>(cols, 0));
     for (int i = 0; i < predict.size(); i++) {
         for (int j = 0; j < predict[i].size(); j++) {
-            int loc_value = (prods[i][0] - 1) * cols + predict[i][j]*(-1) - 1;
-            table[loc_value] = i + 1;
+            int row = prods[i][0] - 1;
+            int col = predict[i][j]*(-1) - 1;
+            //int loc_value = (prods[i][0] - 1) * cols + predict[i][j]*(-1) - 1;
+            p_tab[row][col] = i + 1;
         }
     }
+    return p_tab;
 }
 
 /*
@@ -288,10 +306,8 @@ void fill_parse_table(int table[], int rows, int cols, vector< vector<int> > pre
     splits the input file into a vector of tokens and a vector of productions,
     then uses these vectors as arguments to set_variables
  */
-int setup() {
+int generate_parse_table() {
     vector<string> contents = read_file("grammar.txt");
-    vector<string> terminals;
-    vector<string> productions;
 
     //split contents into terminals and productions
     bool found_blank = false;
@@ -310,7 +326,7 @@ int setup() {
     map<string, int> terminals_map = fill_terminals(terminals);
     map<string, int> nonterminals_map = fill_nonterminals(productions);
 
-    vector< vector<int> > prods = fill_productions(terminals_map, nonterminals_map, productions);
+    prods = fill_productions(terminals_map, nonterminals_map, productions);
     vector<bool> eps = fill_eps(prods, nonterminals_map.size());
     for (int i = 1; i < eps.size(); i++)
         cout << "eps[" << i << "] " << eps[i] << endl;
@@ -330,7 +346,7 @@ int setup() {
     terminals_map.clear();
     nonterminals_map.clear();
 
-    vector< vector<int> > firsts = fill_first(prods, eps, num_nonterms);
+    firsts = fill_first(prods, eps, num_nonterms);
     for (int i = 1; i < firsts.size(); i++) {
         cout << "firsts[" << (i) << "] ";
         for (int j = 0; j < firsts[i].size(); j++) {
@@ -340,7 +356,7 @@ int setup() {
     }
     cout << endl;
 
-    vector< vector<int> > follows = fill_follow(prods, eps, num_nonterms, firsts);
+    follows = fill_follow(prods, eps, num_nonterms, firsts);
     for (int i = 0; i < 10; i++) {
         cout << "follows[" << i << "] ";
         for (int j = 0; j < follows[i].size(); j++)
@@ -360,13 +376,13 @@ int setup() {
         }
     }
 
-    int parse_table[num_nonterms * max_terminal];
-    for (int i = 0; i < num_nonterms * max_terminal; i++)
-        parse_table[i] = 0;
-    fill_parse_table(parse_table, num_nonterms, max_terminal, predicts, prods);
+    //int parse_table[num_nonterms * max_terminal];
+    //for (int i = 0; i < num_nonterms * max_terminal; i++)
+        //parse_table[i] = 0;
+    parse_table = fill_parse_table(num_nonterms, max_terminal, predicts, prods);
     for (int row = 0; row < num_nonterms; row++) {
         for (int col = 0; col < max_terminal; col++) {
-            cout << parse_table[row*max_terminal + col] << " ";
+            cout << parse_table[row][col] << " ";
         }
         cout << endl;
     }

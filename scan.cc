@@ -1,6 +1,7 @@
 //For CSC 435 Programming Languages, project 2 part 1. 
 //A naive scanner. 
 
+#include <stdio.h>
 #include <iostream>
 using std::cin;
 #include <assert.h>
