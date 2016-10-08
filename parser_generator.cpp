@@ -12,16 +12,7 @@ vector< vector<int> > prods;
 vector< vector<int> > firsts;
 vector< vector<int> > follows;
 vector< vector<int> > parse_table;
-/*int number_of_productions;
-int number_of_terminals;
-int number_of_nonterminals;
-int number_of_symbols;
-vector<int> terminal_numbers;
-vector<string> nonterminals;
-vector<int> nonterminal_numbers;
-vector< vector<int> > right_hand_sides;
-*/
->>>>>>> 05b060a423556de2147ef76ee36c8541e3158bc9
+
 /*
     Takes in a string to be split and a delimiter around which to split the
     string. The resulting substrings are stored in a vector, which is returned.
@@ -50,7 +41,7 @@ vector<string> split(string str, string delimiter) {
     Takes in a file's name in string form and reads the contents of the file.
     Each line is separately added to a vector of strings, which is returned.
 
-    Used by functions: setup()
+    Used by functions: generate_parse_table()
  */
 vector<string> read_file(string filename) {
     vector<string> contents;
@@ -68,7 +59,7 @@ vector<string> read_file(string filename) {
     Takes in a vector of all terminals in string form. These terminals are added
     as keys to a map with their integer equivalent as their keys.
 
-    Used by functions: setup()
+    Used by functions: generate_parse_table()
  */
 map<string, int> fill_terminals(vector<string> terminals_str) {
     map<string, int> terminals_map;
@@ -86,7 +77,7 @@ map<string, int> fill_terminals(vector<string> terminals_str) {
     Takes in a vector of all nonterminals in string form. These terminals are
     added as keys to a map with their integer equivalent as their keys.
 
-    Used by functions: setup()
+    Used by functions: generate_parse_table()
  */
 map<string, int> fill_nonterminals(vector<string> productions) {
     map<string, int> nonterminals_map;
@@ -99,7 +90,12 @@ map<string, int> fill_nonterminals(vector<string> productions) {
 }
 
 /*
+    Takes in the map of terminals and the map of nonterminals, as well as the
+    vector of strings holding all of the productions. These inputs are used to
+    create a 2D vector of integers representing the productions numerically,
+    which is returned.
 
+    Used by functions: generate_parse_table()
  */
 vector< vector<int> > fill_productions(map<string, int> terminals, map<string, int> nonterminals, vector<string> productions) {
     vector< vector<int> > prod_out;
@@ -124,6 +120,15 @@ vector< vector<int> > fill_productions(map<string, int> terminals, map<string, i
     return prod_out;
 }
 
+/*
+    Takes in the 2D vector containing the numeric representation of all
+    productions, as well as the number of unique nonterminals in the
+    productions. These are used to determine which nonterminals can go to
+    epsilon. The bool value representing whether a nonterminal can produce
+    epsilon is added to a vector, which is returned.
+
+    Used by functions: generate_parse_table()
+*/
 vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
     vector<bool> out(num_nonterms + 1, false);
     for (int i = 0; i < prods.size(); i++) {
@@ -134,6 +139,12 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
     return out;
 }
 
+/*
+    Takes in a vector of integers and an integer, and checks to see whether
+    the integer is within the vector.
+
+    Used by: vector_union()
+ */
 bool vector_contains(vector<int> v, int n) {
     for (int i = 0; i < v.size(); i++) {
         if (v[i] == n)
@@ -142,8 +153,13 @@ bool vector_contains(vector<int> v, int n) {
     return false;
 }
 
-//add everything in v2 into v1, without making duplicates.
-//returns true if something was added, false if no change
+/*
+    Takes in two vectors and adds every element in the second vector not already
+    contained by the first vector into the first vector. Return false if nothing
+    was added and true if something was added.
+
+    Used by functions: fill_first(), string_first(), fill_follow(), fill_predict()
+ */
 bool vector_union(vector<int> &v1, vector<int> &v2) {
     bool out = false;
     for (int i = 0; i < v2.size(); i++) {
@@ -155,6 +171,13 @@ bool vector_union(vector<int> &v1, vector<int> &v2) {
     return out;
 }
 
+/*
+    Takes in two vectors and adds every element in the second vector not already
+    contained by the first vector into the first vector. Return false if nothing
+    was added and true if something was added.
+
+    Used by functions: fill_first(), string_first(), fill_follow(), fill_predict()
+ */
 bool vector_union(vector<int> *v1, const vector<int> v2) {
     bool out = false;
     for (int i = 0; i < v2.size(); i++) {
@@ -166,6 +189,15 @@ bool vector_union(vector<int> *v1, const vector<int> v2) {
     return out;
 }
 
+/*
+    Takes in a 2D vector of the numeric representations of productions, the
+    vector of booleans representing whether a nonterminal can produce epsilon,
+    and the number of unique nonterminals. These are used to calculate the
+    FIRST set of all nonterminals, which are stored inside of a 2D vector, which
+    is then returned.
+
+    Used by functions: generate_parse_table()
+ */
 vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, int num_non_terms) {
     vector< vector<int> > firsts;
     for (int i = 0; i < num_non_terms + 1; i++) //make a vector for each nonterminal
@@ -192,7 +224,9 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
     return firsts;
 }
 
-
+/*
+    Used by functions: fill_follow()
+ */
 bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
     for (int i = begin; i < end; i++) {
         if ( X[i] < 0 || !eps[X[i]])
@@ -201,6 +235,9 @@ bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
     return true;
 }
 
+/*
+    Used by functions: fill_follow()
+ */
 vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> > firsts, vector<bool> eps) {
     vector<int> out;
     for (int i = begin; i < end; i++) {
@@ -217,6 +254,15 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
     return out;
 }
 
+/*
+    Takes in a 2D vector of the numeric representations of productions, the
+    vector of booleans representing whether a nonterminal can produce epsilon,
+    the number of unique nonterminals, and the 2D vector of all FIRST sets.
+    These are used to calculate the FOLLOW set of all nonterminals, which are
+    stored inside of a 2D vector, which is then returned.
+
+    Used by functions: generate_parse_table()
+ */
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
@@ -248,6 +294,16 @@ int number_of_nonterms, vector< vector<int> > firsts) {
     return follows;
 }
 
+/*
+    Takes in a 2D vector of the numeric representations of productions, the
+    vector of booleans representing whether a nonterminal can produce epsilon,
+    the 2D vector of the numeric representations of all FIRST sets, and the 2D
+    vector of the numeric represenations of all FOLLOW sets. These are used to
+    calculate the FIRST set of all nonterminals, which are stored inside of a 2D
+    vector, which is then returned.
+
+    Used by functions: generate_parse_table()
+ */
 vector< vector<int> > fill_predict(vector< vector<int> > productions, vector<bool> eps,
 vector< vector<int> > firsts, vector< vector<int> > follows) {
     vector< vector<int> > predicts;
@@ -273,6 +329,14 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
     return predicts;
 }
 
+/*
+    Takes in a number of rows and columns, the 2D vector of the numeric
+    representations of the predict sets, and the 2D vector of the numeric
+    representations of the productions. These are used to created a 2D vector
+    that contains the full parse table for the grammar.
+
+    Used by functions: generate_parse_table()
+ */
 vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> > predict, vector< vector<int> > prods) {
     vector< vector<int> > p_tab(rows, vector<int>(cols, 0));
     for (int i = 0; i < predict.size(); i++) {
@@ -287,24 +351,10 @@ vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> >
 }
 
 /*
-    assigns values to the variables declared at the beginning
- */
-/*void set_variables(vector<string> contents, vector<string> productions) {
-    number_of_terminals = contents.size() - 1;
-    number_of_productions = productions.size();
+    Runs the preceding functions in order to generate a parse table from the
+    grammar passed to the read_file() function.
 
-    fill_terminals(contents);
-    fill_nonterminals(productions);
-
-    number_of_nonterminals = nonterminals.size();
-    number_of_symbols = number_of_nonterminals + number_of_terminals;
-
-    //set_right_hand_sides(productions, contents);
-}*/
-
-/*
-    splits the input file into a vector of tokens and a vector of productions,
-    then uses these vectors as arguments to set_variables
+    Used by: driver.cc
  */
 int generate_parse_table() {
     vector<string> contents = read_file("grammar.txt");
@@ -386,8 +436,5 @@ int generate_parse_table() {
         }
         cout << endl;
     }
-
-    //set_variables(terminals, productions);
-
     return 0;
 }
