@@ -12,6 +12,7 @@ vector< vector<int> > prods;
 vector< vector<int> > firsts;
 vector< vector<int> > follows;
 vector< vector<int> > parse_table;
+int max_terminal = 0;
 
 /*
     Takes in a string to be split and a delimiter around which to split the

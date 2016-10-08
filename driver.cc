@@ -28,6 +28,7 @@ int main() {
         if (expected < 0) {
             if (expected * -1 == input.num) {
                 cout << "Match " << input.image << endl;
+                input = scan();
             }
             else {
                 cout << "ERROR: expected: " << expected << " input: " << input.num << endl;
@@ -41,13 +42,14 @@ int main() {
         else {
             if (parse_table[expected-1][input.num-1] == 0) {
                 cout << "Parse error :( Exiting" << endl;
+                cout << "expected: " << expected << " input: " << input.num << endl;
                 exit(1);
             }
             else {
                 int prediction = parse_table[expected-1][input.num-1];
-                cout << "Predict " << productions[prediction] << endl;
-                for (int i = prods[prediction].size() - 1; i > 0; i--){
-                    parse_stack.push(prods[prediction][i]);
+                cout << "Predict " << productions[prediction-1] << endl;
+                for (int i = prods[prediction-1].size() - 1; i > 0; i--){
+                    parse_stack.push(prods[prediction-1][i]);
                 }
             }
         }
