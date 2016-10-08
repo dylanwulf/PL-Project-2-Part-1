@@ -7,7 +7,7 @@ all : driver
 driver : $(OBJECTS)
 	$(CC) -g -o driver $(OBJECTS)
 
-driver.o : driver.cc scan.h
+driver.o : driver.cc scan.h parser_generator.cpp
 	$(CC) -c -g driver.cc
 
 scan.o : scan.cc scan.h
