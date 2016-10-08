@@ -21,7 +21,7 @@ int main() {
     generate_parse_table();
     stack<int> parse_stack;
     parse_stack.push(prods[0][0]);
-    cout << "Pushed start symbol " << prods[0][0] << endl;
+    cout << endl << endl << "Start typing!" << endl;
     cout << "Predict " << productions[0] << endl;
     token input = scan();
     while (true) {
