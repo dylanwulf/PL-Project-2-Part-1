@@ -33,6 +33,9 @@ For a large input, this would cause an incredibly slow program. However,
 because the algorithms return the correct results and this program is intended
 for purely academic use, we decided to keep the result as is.
 
-Additionally, we did not have time to implement the syntax error recovery. This
-means that any invalid input will not be handled correctly, and the program will
-crash. 
+Additionally, we did not have time to implement any sort of error handling. The
+comments for the functions indicate that we handle incorrect grammar input
+(such as a malformed grammar or a non-LL(1) grammar), but we ran out of time
+and were unable to implement this. Additionally, we ran out of time before
+being able to implement syntax error recovery, even though, once again, our
+comments indicate that this is something we implemented.

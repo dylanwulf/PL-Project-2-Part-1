@@ -6,6 +6,7 @@
 #include <map>
 using namespace std;
 
+int max_terminal = 0;
 vector<string> terminals;
 vector<string> productions;
 vector< vector<int> > prods;
@@ -352,7 +353,8 @@ vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> >
 
 /*
     Runs the preceding functions in order to generate a parse table from the
-    grammar passed to the read_file() function.
+    grammar passed to the read_file() function. If the input grammar is
+    malformed or not LL(1), an error message is printed to the terminal.
 
     Used by: driver.cc
  */

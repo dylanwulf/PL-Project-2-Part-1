@@ -10,11 +10,13 @@ using std::right;
 #include "parser_generator.cpp"
 using namespace scanner;
 
-// Call scanner repeatedly, printing results.
-// You'll throw this code away once you've written your parser driver.
-
-
-
+/*
+    Uses a parse table to creates a working parser for the CGF in put to the
+    parser_generator.cpp file. This parser takes in any strings that are of the
+    language defined by the CFG. The predictions and matches of the parser are
+    traced and printed as the strings are processed. Incorrect input is marked
+    as such for the user.
+ */
 int main() {
     generate_parse_table();
     stack<int> parse_stack;
