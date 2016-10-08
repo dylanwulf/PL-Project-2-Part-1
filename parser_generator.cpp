@@ -184,7 +184,8 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
     vector< vector<int> > follows;
-    for (int i = 0; i < number_of_nonterms + 75; i++)
+    follows.push_back(vector<int>(1, 0));
+    for (int i = 0; i < number_of_nonterms + 1000; i++)
         follows.push_back(vector<int>());
 
     bool change = true;
@@ -203,6 +204,31 @@ int number_of_nonterms, vector< vector<int> > firsts) {
         }
     }
     return follows;
+}
+
+vector< vector<int> > fill_predict(vector< vector<int> > productions, vector<bool> eps,
+vector< vector<int> > firsts, vector< vector<int> > follows) {
+    vector< vector<int> > predicts;
+    for(int i = 0; i < productions.size(); i++) {
+        vector<int> predict;
+        if(!(productions[i].size() < 2)) {
+            if(productions[i][1] < 0) {
+                vector<int> temp = vector<int>(1, productions[i][1]);
+                vector_union(predict, temp);
+            }
+            else {
+                vector_union(predict, firsts[productions[i][1]]);
+                if(eps[productions[i][1]]) {
+                    vector_union(predict, follows[productions[i][0]]);
+                }
+            }
+        }
+        else {
+            vector_union(predict, follows[productions[i][0]-1]);
+        }
+        predicts.push_back(predict);
+    }
+    return predicts;
 }
 
 /*
@@ -274,18 +300,30 @@ int main() {
         }
         cout << endl;
     }
-
+    cout << endl;
 
     vector< vector<int> > follows = fill_follow(prods, eps, num_nonterms, firsts);
     for (int i = 0; i < follows.size(); i++) {
-        cout << "follows[" << i << "] ";
-        for (int j = 0; j < follows[i].size(); j++)
-            cout << follows[i][j] << ", ";
-        cout << endl;
+        if (!follows[i].empty()) {
+            cout << "follows[" << i << "] ";
+            for (int j = 0; j < follows[i].size(); j++) {
+                cout << follows[i][j] << ", ";
+            }
+            cout << endl;
+        }
     }
+    cout << endl;
 
-    // vector< vector<int> > follows = fill_follow(prods, eps, prod_to_nons,
-    //     nonterminals_map.size() + terminals_map.size(), firsts);
+    vector< vector<int> > predicts = fill_predict(prods, eps, firsts, follows);
+    for (int i = 0; i < predicts.size(); i++) {
+        if (!predicts[i].empty()) {
+            cout << "predicts[" << i << "] ";
+            for (int j = 0; j < predicts[i].size(); j++) {
+                cout << predicts[i][j] << ", ";
+            }
+            cout << endl;
+        }
+    }
 
     //set_variables(terminals, productions);
 
