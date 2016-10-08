@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <stack>
 using std::cout;
 using std::setw;
 using std::left;
@@ -15,6 +16,7 @@ using namespace scanner;
 
 
 int main() {
+    generate_parse_table();
     token tok;
     do {
         tok = scan();
