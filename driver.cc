@@ -22,7 +22,6 @@ int main() {
     stack<int> parse_stack;
     parse_stack.push(prods[0][0]);
     cout << endl << endl << "Start typing!" << endl;
-    cout << "Predict " << productions[0] << endl;
     token input = scan();
     while (true) {
         int expected = parse_stack.top();
