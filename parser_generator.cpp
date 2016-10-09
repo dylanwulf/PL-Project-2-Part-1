@@ -321,7 +321,13 @@ vector< vector<int> > fill_parse_table(int rows, int cols, vector< vector<int> >
         for (int j = 0; j < predict[i].size(); j++) {
             int row = prods[i][0] - 1;
             int col = predict[i][j]*(-1) - 1;
-            p_tab[row][col] = i + 1;
+            if(p_tab[row][col] == 0)
+                p_tab[row][col] = i + 1;
+            else {
+                cout << "Grammar is not LL(1)." << endl;
+                vector< vector<int> > incorrect_input(0, vector<int>(0, 0));
+                return incorrect_input;
+            }
         }
     }
     return p_tab;
@@ -405,11 +411,17 @@ int generate_parse_table(string grammar_file_name) {
     }
 
     parse_table = fill_parse_table(num_nonterms, max_terminal, predicts, prods);
-    for (int row = 0; row < num_nonterms; row++) {
-        for (int col = 0; col < max_terminal; col++) {
-            cout << parse_table[row][col] << " ";
+    if(parse_table.size() != 0) {
+        for (int row = 0; row < num_nonterms; row++) {
+            for (int col = 0; col < max_terminal; col++) {
+                cout << parse_table[row][col] << " ";
+            }
+            cout << endl;
         }
-        cout << endl;
+    }
+    else {
+        cout << "Please input an LL(1) grammar." << endl;
+        return 1;
     }
     return 0;
 }
