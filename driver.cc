@@ -15,7 +15,8 @@ using namespace scanner;
     parser_generator.cpp file. This parser takes in any strings that are of the
     language defined by the CFG. The predictions and matches of the parser are
     traced and printed as the strings are processed. Incorrect input is marked
-    as such for the user.
+    as such for the user. If the grammar is not LL(1), then the driver does not
+    accept any input and terminates.
  */
 int main() {
     if (generate_parse_table("grammar.txt")) return 0;
@@ -23,6 +24,7 @@ int main() {
     parse_stack.push(prods[0][0]);
     cout << endl << endl << "Start typing!" << endl;
     token input = scan();
+    if (input.name )
     while (true) {
         int expected = parse_stack.top();
         parse_stack.pop();
