@@ -10,6 +10,13 @@ using std::right;
 #include "parser_generator.cpp"
 using namespace scanner;
 
+bool grammar_contains(int token_number) {
+    map<string, int> terminals_map = fill_terminals(terminals);
+    for(auto elem: terminals_map)
+        if(elem.second == token_number) return true;
+    return false;
+}
+
 /*
     Uses a parse table to creates a working parser for the CGF in put to the
     parser_generator.cpp file. This parser takes in any strings that are of the
@@ -24,8 +31,11 @@ int main() {
     parse_stack.push(prods[0][0]);
     cout << endl << endl << "Start typing!" << endl;
     token input = scan();
-    if (input.name )
     while (true) {
+        if (!grammar_contains(input.num)) {
+            cout << "Error: incorrect syntax" << endl;
+            input = scan();
+        }
         int expected = parse_stack.top();
         parse_stack.pop();
         if (expected < 0) {
@@ -35,7 +45,7 @@ int main() {
             }
             else {
                 cout << "ERROR: expected: " << expected << " input: " << input.num << endl;
-                exit(1);
+                continue;
             }
             if (expected * -1 == tok_eof) {
                 cout << "Done! Bye!" << endl;
