@@ -7,6 +7,16 @@
 #include "parser_generator.h"
 using namespace std;
 
+int max_terminal;
+vector<string> terminals;
+vector<string> productions;
+vector< vector<int> > prods;
+vector< vector<int> > firsts;
+vector< vector<int> > follows;
+vector< vector<int> > parse_table;
+map<string, int> terminals_map;
+map<string, int> nonterminals_map;
+
 /*
     Takes in a string to be split and a delimiter around which to split the
     string. The resulting substrings are stored in a vector, which is returned.
