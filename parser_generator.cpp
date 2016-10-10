@@ -4,15 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include "parser_generator.h"
 using namespace std;
-
-int max_terminal = 0;
-vector<string> terminals;
-vector<string> productions;
-vector< vector<int> > prods;
-vector< vector<int> > firsts;
-vector< vector<int> > follows;
-vector< vector<int> > parse_table;
 
 /*
     Takes in a string to be split and a delimiter around which to split the
@@ -100,18 +93,24 @@ map<string, int> fill_nonterminals(vector<string> productions) {
  */
 vector< vector<int> > fill_productions(map<string, int> terminals, map<string, int> nonterminals, vector<string> productions) {
     vector< vector<int> > prod_out;
+    //for each production
     for (vector<string>::iterator it = productions.begin(); it != productions.end(); it++) {
+        //split string at -> symbol
         vector<string> str_prods = split(*it, "->");
         string nonterminal_name = split(str_prods[0], " ")[0];
         int lhs_nonterm_num = nonterminals[nonterminal_name];
         vector<int> production = vector<int>(1, lhs_nonterm_num);
+        //if this production isn't empty
         if (str_prods.size() > 1) {
+            //split apart symbols at spaces
             vector<string> rhs_str = split(str_prods[1], " ");
+            //for each symbol in the production
             for (vector<string>::iterator it = rhs_str.begin(); it != rhs_str.end(); it++) {
+                //find the number ID of that symbol using the maps
                 int term_num = terminals[*it];
                 int nonterm_num = nonterminals[*it];
                 if (term_num != 0)
-                    production.push_back(-1*term_num);
+                    production.push_back(-1*term_num); //mark terminals with negative sign
                 else
                     production.push_back(nonterm_num);
             }
@@ -147,12 +146,15 @@ vector<bool> fill_eps(vector< vector<int> > prods, int num_nonterms) {
 
     Used by functions: fill_first(), string_first(), fill_follow(), fill_predict()
  */
-vector<int> vector_union(const vector<int> v1, const vector<int> v2) {
-    vector<int> out(v1.size() + v2.size());
+bool vector_union(vector<int> &v1, vector<int> &v2) {
+    vector<int> temp(v1.size() + v2.size());
     vector<int>::iterator it;
-    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), out.begin());
-    out.resize(it-out.begin());
-    return out;
+    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), temp.begin());
+    temp.resize(it - temp.begin());
+    v1.swap(temp);
+    if (v1.size() != temp.size())
+        return true;
+    return false;
 }
 
 /*
@@ -165,34 +167,33 @@ vector<int> vector_union(const vector<int> v1, const vector<int> v2) {
     Used by functions: generate_parse_table()
  */
 vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, int num_non_terms) {
-    vector< vector<int> > firsts;
-    for (int i = 0; i < num_non_terms + 1; i++) //make a vector for each nonterminal
-        firsts.push_back(vector<int>());
+    //initialize by making a vector for each nonterminal
+    vector< vector<int> > firsts(num_non_terms + 1, vector<int>());
 
+    //Keep looping until no progress
     bool changed = true;
     while (changed) {
         changed = false;
+        //for each production
         for(int lhs = 0; lhs < prods.size(); lhs++) {
+            //for each symbol in current production
+            //start at 1 because the lhs is stored at location 0
             for (int rhs = 1; rhs < prods[lhs].size(); rhs++) {
                 int term = prods[lhs][rhs];
-                if (term < 0) {
+                if (term < 0) { //if terminal
                     vector<int> term_vector(1, term);
-                    int old_size = firsts[prods[lhs][0]].size();
-                    firsts[prods[lhs][0]] = vector_union(firsts[prods[lhs][0]], term_vector);
-                    int new_size = firsts[prods[lhs][0]].size();
-                    if (new_size != old_size)
-                        changed = true;
-                    rhs = prods[lhs].size();
+                    //add this term to the first set of the symbol on the lhs
+                    changed = changed || vector_union(firsts[prods[lhs][0]], term_vector);
+                    rhs = prods[lhs].size() + 5; //continue outer loop.
                 }
-                else {
-                    int old_size = firsts[prods[lhs][0]].size();
-                    firsts[prods[lhs][0]] = vector_union(firsts[prods[lhs][0]], firsts[term]);
-                    int new_size = firsts[prods[lhs][0]].size();
-                    if (new_size != old_size)
-                        changed = true;
+                else { //if nonterminal
+                    //add the firsts of this term to the firsts of the lhs
+                    changed = changed || vector_union(firsts[prods[lhs][0]], firsts[term]);
                 }
                 if (term > 0 && eps[term] == false)
-                    rhs = prods[lhs].size();
+                    rhs = prods[lhs].size() + 5;
+                if (rhs == prods[lhs].size() - 1 && term > 0)
+                    eps[prods[lhs][0]] = true;
             }
         }
     }
@@ -200,6 +201,7 @@ vector< vector<int> > fill_first(vector< vector<int> > prods, vector<bool> eps, 
 }
 
 /*
+    Implementation of the string_EPS function seen in the textbook algorithm
     Used by functions: fill_follow()
  */
 bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
@@ -211,6 +213,7 @@ bool string_eps(vector<int> X, int begin, int end, vector<bool> eps) {
 }
 
 /*
+    Implementation of the string_first function seen in the textbook algorithm
     Used by functions: fill_follow()
  */
 vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> > firsts, vector<bool> eps) {
@@ -221,7 +224,7 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
             first = vector<int>(1, X[i]);
         else
             first = firsts[X[i]];
-        out = vector_union(out, first);
+        vector_union(out, first);
         if (X[i] < 0 || !eps[X[i]]){
             return out;
         }
@@ -240,10 +243,7 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
  */
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
-    vector< vector<int> > follows;
-    for (int i = 0; i < number_of_nonterms + 1; i++){
-        follows.push_back(vector<int>());
-    }
+    vector< vector<int> > follows(number_of_nonterms + 1, vector<int>());
 
     bool change = true;
     while (change) {
@@ -253,18 +253,12 @@ int number_of_nonterms, vector< vector<int> > firsts) {
                 if(j < productions[i].size() - 1 && productions[i][j] > 0) {
                     vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
                     vector<int> *follow_current = &follows[productions[i][j]-1];
-                    int old_size = follow_current->size();
-                    *follow_current = vector_union(*follow_current, str_first);
-                    if (follow_current->size() != old_size)
-                        change = true;
+                    change = change || vector_union(*follow_current, str_first);
                 }
                 if(productions[i][j] > 0 && (j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps))) {
                     vector<int> *follow_current = &follows[productions[i][j]-1];
                     vector<int> follow_lhs = follows[productions[i][0]-1];
-                    int old_size = follow_current->size();
-                    *follow_current = vector_union(*follow_current, follow_lhs);
-                    if (follow_current->size() != old_size)
-                        change = true;
+                    change = change || vector_union(*follow_current, follow_lhs);
                 }
             }
         }
@@ -290,17 +284,17 @@ vector< vector<int> > firsts, vector< vector<int> > follows) {
         if(!(productions[i].size() < 2)) {
             if(productions[i][1] < 0) {
                 vector<int> temp = vector<int>(1, productions[i][1]);
-                predict = vector_union(predict, temp);
+                vector_union(predict, temp);
             }
             else {
-                predict = vector_union(predict, firsts[productions[i][1]]);
+                vector_union(predict, firsts[productions[i][1]]);
                 if(eps[productions[i][1]]) {
-                    predict = vector_union(predict, follows[productions[i][0]]);
+                    vector_union(predict, follows[productions[i][0]]);
                 }
             }
         }
         else {
-            predict = vector_union(predict, follows[productions[i][0]-1]);
+            vector_union(predict, follows[productions[i][0]-1]);
         }
         predicts.push_back(predict);
     }
@@ -357,69 +351,25 @@ int generate_parse_table(string grammar_file_name) {
         }
     }
 
-    map<string, int> terminals_map = fill_terminals(terminals);
-    map<string, int> nonterminals_map = fill_nonterminals(productions);
+    //calculate map from terminal names to terminal numbers
+    terminals_map = fill_terminals(terminals);
+    //calculate map from nonterminal names to nonterminal numbers
+    nonterminals_map = fill_nonterminals(productions);
 
+    //use the maps to generate a 2D int vector of productions
     prods = fill_productions(terminals_map, nonterminals_map, productions);
     vector<bool> eps = fill_eps(prods, nonterminals_map.size());
-    for (int i = 1; i < eps.size(); i++)
-        cout << "eps[" << i << "] " << eps[i] << endl;
-    cout << endl;
-
-    for (int i = 0; i < prods.size(); i++) {
-        cout << "prods[" << i << "] ";
-        for (int j = 0; j < prods[i].size(); j++) {
-            cout << prods[i][j] << ", ";
-        }
-        cout << endl;
-    }
-    cout << endl;
 
     int num_nonterms = nonterminals_map.size();
     int num_terms = terminals_map.size();
-    terminals_map.clear();
-    nonterminals_map.clear();
-
     firsts = fill_first(prods, eps, num_nonterms);
-    for (int i = 1; i < firsts.size(); i++) {
-        cout << "firsts[" << (i) << "] ";
-        for (int j = 0; j < firsts[i].size(); j++) {
-            cout << firsts[i][j] << ", ";
-        }
-        cout << endl;
-    }
-    cout << endl;
 
     follows = fill_follow(prods, eps, num_nonterms, firsts);
-    for (int i = 0; i < 10; i++) {
-        cout << "follows[" << i << "] ";
-        for (int j = 0; j < follows[i].size(); j++)
-            cout << follows[i][j] << ", ";
-        cout << endl;
-    }
-    cout << endl;
 
     vector< vector<int> > predicts = fill_predict(prods, eps, firsts, follows);
-    for (int i = 0; i < predicts.size(); i++) {
-        if (!predicts[i].empty()) {
-            cout << "predicts[" << i << "] ";
-            for (int j = 0; j < predicts[i].size(); j++) {
-                cout << predicts[i][j] << ", ";
-            }
-            cout << endl;
-        }
-    }
 
     parse_table = fill_parse_table(num_nonterms, max_terminal, predicts, prods);
-    if(parse_table.size() != 0) {
-        for (int row = 0; row < num_nonterms; row++) {
-            for (int col = 0; col < max_terminal; col++) {
-                cout << parse_table[row][col] << " ";
-            }
-            cout << endl;
-        }
-    }
-    else {
+    if(parse_table.size() == 0) {
         cout << "Please input an LL(1) grammar." << endl;
         return 1;
     }
