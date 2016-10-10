@@ -2,13 +2,10 @@
 #include <iomanip>
 #include <stack>
 #include <algorithm>
-using std::cout;
-using std::setw;
-using std::left;
-using std::right;
-
+#include <cstdlib>
 #include "scan.h"
 #include "parser_generator.h"
+using namespace std;
 using namespace scanner;
 
 /*
@@ -46,10 +43,10 @@ bool contains(int token_number, string type, stack<int> parse_stack, int expecte
     terminates.
  */
 int main() {
-    if (generate_parse_table("grammar.txt")) return 0;
+    if (generate_parse_table("grammar.txt")) return 1;
     stack<int> parse_stack;
     parse_stack.push(prods[0][0]);
-    cout << endl << endl << "Start typing!" << endl;
+    cout << "Start typing!" << endl;
     token input = scan();
     while (true) {
         if (!contains(input.num, "token", parse_stack, 0)) {
@@ -93,13 +90,5 @@ int main() {
         }
     }
 
-    token tok;
-    do {
-        tok = scan();
-        cout << setw(12) << left << tok.name
-             << setw(5) << right << tok.line
-             << setw(4) << right << tok.column
-             << "   " << tok.image << "\n";
-    } while (tok.num != tok_eof);
     return 0;
 }

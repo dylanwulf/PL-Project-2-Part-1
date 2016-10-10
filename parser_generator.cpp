@@ -7,6 +7,7 @@
 #include "parser_generator.h"
 using namespace std;
 
+//--globals--
 int max_terminal;
 vector<string> terminals;
 vector<string> productions;
@@ -253,21 +254,31 @@ vector<int> string_first(vector<int> X, int begin, int end, vector< vector<int> 
  */
 vector< vector<int> > fill_follow(vector< vector<int> > productions, vector<bool> eps,
 int number_of_nonterms, vector< vector<int> > firsts) {
+    //initialize follow vectors
     vector< vector<int> > follows(number_of_nonterms + 1, vector<int>());
 
+    //Keep looping until no progress
     bool change = true;
     while (change) {
         change = false;
+        //for each production
         for (int i = 0; i < productions.size(); i++){
+            //for each symbol in production rhs
             for (int j = 1; j < productions[i].size(); j++) {
+                //if nonterminal and not the last symbol
                 if(j < productions[i].size() - 1 && productions[i][j] > 0) {
+                    //compute first set of all symbols following the current one
                     vector<int> str_first = string_first(productions[i], j+1, productions[i].size(), firsts, eps);
                     vector<int> *follow_current = &follows[productions[i][j]-1];
+                    //add str_first to follow_current
                     change = change || vector_union(*follow_current, str_first);
                 }
+                //if nonterminal and (this is the last symbol in the production OR
+                //all symbols after current one can go to epsilon)
                 if(productions[i][j] > 0 && (j == productions[i].size() - 1 || string_eps(productions[i], j+1, productions[i].size(), eps))) {
                     vector<int> *follow_current = &follows[productions[i][j]-1];
                     vector<int> follow_lhs = follows[productions[i][0]-1];
+                    //add follow of lhs to follow of current symbol
                     change = change || vector_union(*follow_current, follow_lhs);
                 }
             }
