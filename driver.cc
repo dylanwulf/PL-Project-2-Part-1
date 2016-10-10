@@ -23,7 +23,6 @@ bool contains(int token_number, string type, stack<int> parse_stack, int expecte
         }
     }
     else if (type == "nonterminal") {
-        cout << "Here " << expected << endl;
         vector<int> follow_set = follows[expected];
         vector<int> first_set = firsts[expected];
         if(find(follow_set.begin(), follow_set.end(), token_number) != follow_set.end()) {
