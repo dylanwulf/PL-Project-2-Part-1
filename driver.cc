@@ -7,23 +7,43 @@ using std::left;
 using std::right;
 
 #include "scan.h"
-#include "parser_generator.cpp"
+#include "parser_generator.h"
 using namespace scanner;
 
-bool grammar_contains(int token_number) {
-    map<string, int> terminals_map = fill_terminals(terminals);
-    for(auto elem: terminals_map)
-        if(elem.second == token_number) return true;
+/*
+    Checks to see whether the grammar contains the input token given by the
+    user.
+ */
+bool contains(int token_number, string type, stack<int> parse_stack, int expected) {
+    if (type == "token") {
+        for (map<string,int>::iterator it=terminals_map.begin(); it!=terminals_map.end(); ++it) {
+            if(it->second == token_number)
+                return true;
+        }
+    }
+    else if (type == "nonterminal") {
+        cout << "Here " << expected << endl;
+        vector<int> follow_set = follows[expected];
+        vector<int> first_set = firsts[expected];
+        if(find(follow_set.begin(), follow_set.end(), token_number) != follow_set.end()) {
+            parse_stack.pop();
+            return true;
+        }
+        else if(find(first_set.begin(), first_set.end(), token_number) != first_set.end()) {
+            return true;
+        }
+    }
     return false;
 }
 
 /*
-    Uses a parse table to creates a working parser for the CGF in put to the
+    Uses a parse table to create a working parser for the CFg in put to the
     parser_generator.cpp file. This parser takes in any strings that are of the
     language defined by the CFG. The predictions and matches of the parser are
-    traced and printed as the strings are processed. Incorrect input is marked
-    as such for the user. If the grammar is not LL(1), then the driver does not
-    accept any input and terminates.
+    traced and printed as the strings are processed. If input is entered with
+    incorrect syntax, then parsing continues, but prints an error message. If
+    the grammar is not LL(1), then the driver does not accept any input and
+    terminates.
  */
 int main() {
     if (generate_parse_table("grammar.txt")) return 0;
@@ -32,11 +52,17 @@ int main() {
     cout << endl << endl << "Start typing!" << endl;
     token input = scan();
     while (true) {
-        if (!grammar_contains(input.num)) {
+        if (!contains(input.num, "token", parse_stack, 0)) {
             cout << "Error: incorrect syntax" << endl;
             input = scan();
         }
         int expected = parse_stack.top();
+        if (expected > 0 && parse_table[expected-1][input.num-1] == 0) {
+            if (contains(input.num, "nonterminal", parse_stack, expected)) {
+                continue;
+            }
+            input = scan();
+        }
         parse_stack.pop();
         if (expected < 0) {
             if (expected * -1 == input.num) {
