@@ -80,9 +80,8 @@ int main() {
         }
         else {
             if (parse_table[expected-1][input.num-1] == 0) {
-                cout << "Parse error :( Exiting" << endl;
-                cout << "expected: " << expected << " input: " << input.num << endl;
-                exit(1);
+                cout << "Parse error: expected: " << expected << " input: " << input.num << endl;
+                continue;
             }
             else {
                 int prediction = parse_table[expected-1][input.num-1];
